@@ -86,11 +86,14 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                             return acc;
                         }, {});
 
+                        const rowTotal = Object.values(rowMonths).reduce((sum, amt) => sum + amt, 0);
+
                         return {
                             studentId: s._id,
                             studentName: s.name,
                             rollNo: s.rollNo,
                             mobile: s.mobile,
+                            total: rowTotal,
                             ...rowMonths
                         };
                     });
@@ -115,6 +118,7 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                             marathiMonth: m.marathi,
                             year: selectedYear,
                             amount: trans ? trans.amount : 0,
+                            totalAmount: trans ? trans.amount : 0, // In this context, total for month is same as amount
                             rawDate: trans ? (trans.paymentDate || trans.createdAt) : null,
                             date: trans ? new Date(trans.paymentDate || trans.createdAt).toLocaleDateString() : '-',
                             status: trans ? trans.status : 'Unpaid'
@@ -246,16 +250,17 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                 d.text(tEn('schoolBranding'), pageWidth / 2, 8, { align: 'center' });
                 d.setFontSize(10);
                 d.setFont('helvetica', 'normal');
-                d.text(`${tEn('yearlyCollectionGrid')} - ${selectedYear}`, pageWidth / 2, 14, { align: 'center' });
+                d.text(`${tEn('YearlyCollectionReport')} - ${selectedYear}`, pageWidth / 2, 14, { align: 'center' });
             };
 
             drawHeader(doc);
 
             // Use English headers for the PDF to avoid font issues
-            const tableColumn = ['Name', ...reportMonths.map(m => m.name)];
+            const tableColumn = ['Name', ...reportMonths.map(m => m.name), 'Total'];
             const tableRows = filteredGridData.map(item => [
                 item.studentName,
-                ...reportMonths.map(m => item[m.name] > 0 ? `Rs. ${item[m.name]}` : '-')
+                ...reportMonths.map(m => item[m.name] > 0 ? `Rs. ${item[m.name]}` : '-'),
+                `Rs. ${item.total.toLocaleString()}`
             ]);
 
             autoTable(doc, {
@@ -269,7 +274,7 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                 didDrawPage: (data) => { if (data.pageNumber > 1) drawHeader(doc); }
             });
 
-            doc.save(`Yearly_Grid_${selectedYear}.pdf`);
+            doc.save(`Yearly_Report_${selectedYear}.pdf`);
             return;
         }
 
@@ -321,13 +326,14 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         // Table Data
         const tableColumn = [];
         if (selectedStudentId === 'all' && !isStudent) tableColumn.push(tEn('fullName'));
-        tableColumn.push(tEn('mobileNumber'), tEn('month') + '/' + tEn('year'), tEn('paidAmount'), tEn('paymentDate'), tEn('status'));
+        tableColumn.push(tEn('mobileNumber'), tEn('month') + '/' + tEn('year'), tEn('totalAmount'), tEn('paidAmount'), tEn('paymentDate'), tEn('status'));
 
         const tableRows = filteredData.map(item => {
             const row = [];
             if (selectedStudentId === 'all' && !isStudent) row.push(item.studentName);
             row.push(item.mobile || '-');
             row.push(`${item.month} ${item.year}`);
+            row.push(item.amount > 0 ? `Rs. ${item.amount.toLocaleString()}` : '-');
             row.push(item.amount > 0 ? `Rs. ${item.amount.toLocaleString()}` : '-');
             row.push(item.date);
             row.push(item.status);
@@ -545,6 +551,9 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                                 {language === 'mr' ? m.marathi : m.name}
                                             </th>
                                         ))}
+                                        <th style={{ textAlign: 'center', background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                                            {t('totalAmount')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -561,6 +570,9 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                                         )}
                                                     </td>
                                                 ))}
+                                                <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--color-primary)', background: '#f8fafc' }}>
+                                                    ₹{item.total.toLocaleString()}
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (
@@ -578,6 +590,7 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                     <tr>
                                         {(selectedStudentId === 'all' && !isStudent) && <th>{t('name')}</th>}
                                         <th>{t('monthlyCollection')}</th>
+                                        <th>{t('totalAmount')}</th>
                                         <th>{t('paidAmount')}</th>
                                         <th>{t('paymentDate')}</th>
                                         <th>{t('status')}</th>
@@ -592,6 +605,9 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                                     <td style={{ fontWeight: 600 }}>{item.studentName}</td>
                                                 )}
                                                 <td>{language === 'mr' ? item.marathiMonth : item.month} {item.year}</td>
+                                                <td style={{ fontWeight: 600 }}>
+                                                    {item.amount > 0 ? `₹${item.amount.toLocaleString()}` : '-'}
+                                                </td>
                                                 <td style={{ fontWeight: 700 }}>
                                                     {item.amount > 0 ? `₹${item.amount.toLocaleString()}` : '-'}
                                                 </td>

@@ -160,7 +160,8 @@ const translations = {
         totalPendingBalance: 'TOTAL PENDING BALANCE',
         unpaid: 'Unpaid',
         for: 'for',
-        totalCount: 'Total Count'
+        totalCount: 'Total Count',
+        totalAmount: 'Total Amount'
     },
     hi: {
         appName: 'फीस प्रबंधन',
@@ -321,7 +322,8 @@ const translations = {
         totalPendingBalance: 'कुल बकाया राशि',
         unpaid: 'अवैतनिक',
         for: 'के लिए',
-        totalCount: 'कुल संख्या'
+        totalCount: 'कुल संख्या',
+        totalAmount: 'कुल राशि'
     },
     mr: {
         appName: 'फी व्यवस्थापन',
@@ -482,7 +484,8 @@ const translations = {
         totalPendingBalance: 'एकून थकीत रक्कम',
         unpaid: 'अवैतनिक',
         for: 'साठी',
-        totalCount: 'एकूण संख्या'
+        totalCount: 'एकूण संख्या',
+        totalAmount: 'एकूण रक्कम'
     }
 };
 

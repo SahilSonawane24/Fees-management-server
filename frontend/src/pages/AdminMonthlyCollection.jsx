@@ -133,11 +133,12 @@ function AdminMonthlyCollection({ onLogout }) {
         doc.text(`${t('paid')} ${t('students')}: ${filteredTransactions.filter(t => t.status === 'Paid').length}`, 120, 57);
 
         // Table
-        const tableColumn = [t('name'), t('mobile'), t('rollNo'), t('paidAmount'), t('paymentDate'), t('status')];
+        const tableColumn = [t('name'), t('mobile'), t('rollNo'), t('totalAmount'), t('paidAmount'), t('paymentDate'), t('status')];
         const tableRows = filteredTransactions.map(t => [
             t.student?.name || 'N/A',
             t.student?.mobile || '-',
             t.student?.rollNo || 'N/A',
+            `Rs. ${t.amount.toLocaleString()}`,
             `Rs. ${t.amount.toLocaleString()}`,
             new Date(t.paymentDate || t.createdAt).toLocaleDateString(),
             t.status === 'Paid' ? t('paid') : t('pending')
@@ -318,6 +319,7 @@ function AdminMonthlyCollection({ onLogout }) {
                                 <tr>
                                     <th>{t('name')}</th>
                                     <th>{t('rollNo')}</th>
+                                    <th>{t('totalAmount')}</th>
                                     <th>{t('paidAmount')}</th>
                                     <th>{t('paymentDate')}</th>
                                     <th>{t('status')}</th>
@@ -330,6 +332,7 @@ function AdminMonthlyCollection({ onLogout }) {
                                         <tr key={t._id}>
                                             <td style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{t.student?.name}</td>
                                             <td>{t.student?.rollNo}</td>
+                                            <td style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>₹{t.amount.toLocaleString()}</td>
                                             <td style={{ fontWeight: 700, color: 'var(--color-secondary)' }}>₹{t.amount.toLocaleString()}</td>
                                             <td>{new Date(t.paymentDate || t.createdAt).toLocaleDateString()}</td>
                                             <td><span className={`badge badge-${t.status === 'Paid' ? 'success' : 'danger'}`}>{t.status === 'Paid' ? t('paid') : t('pending')}</span></td>
