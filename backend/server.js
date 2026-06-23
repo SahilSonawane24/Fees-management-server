@@ -21,6 +21,11 @@ app.use(cors());
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Handle browser favicon requests explicitly
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
+
 // Routes
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));
@@ -28,6 +33,11 @@ app.use('/api/transactions', require('./routes/transactionRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');
+});
+
+// 404 handler for unknown routes
+app.use((req, res, next) => {
+    res.status(404).json({ message: 'Route not found' });
 });
 
 // Error handling middleware
