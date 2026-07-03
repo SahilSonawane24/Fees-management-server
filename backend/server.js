@@ -33,6 +33,13 @@ app.use('/api/transactions', require('./routes/transactionRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');
+
+    
+app.post("/api/admin/login", (req, res) => {
+    res.json({
+        success: true,
+        message: "Login API Working"
+    });
 });
 
 // 404 handler for unknown routes
