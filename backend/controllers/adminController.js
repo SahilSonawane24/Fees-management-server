@@ -161,31 +161,50 @@ const updateStudent = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized to update this student' });
         }
 
-        const { name, rollNo, class: studentClass, mobile, schoolName, pendingFee } = req.body;
+        const { name, rollNo, class: studentClass, mobile, schoolName, pendingFee, password } = req.body;
 
+        // Check for duplicate rollNo (exclude current student)
         if (rollNo && rollNo !== student.rollNo) {
-            const rollExists = await Student.findOne({ rollNo });
+            const rollExists = await Student.findOne({ rollNo, _id: { $ne: student._id } });
             if (rollExists) return res.status(400).json({ message: 'Roll number already taken' });
         }
+        // Check for duplicate mobile (exclude current student)
         if (mobile && mobile !== student.mobile) {
-            const mobileExists = await Student.findOne({ mobile });
+            const mobileExists = await Student.findOne({ mobile, _id: { $ne: student._id } });
             if (mobileExists) return res.status(400).json({ message: 'Mobile number already taken' });
         }
 
-        student.name = name || student.name;
-        student.rollNo = rollNo || student.rollNo;
-        student.class = studentClass || student.class;
-        student.mobile = mobile || student.mobile;
-        student.schoolName = schoolName || student.schoolName;
-        student.pendingFee = pendingFee !== undefined ? pendingFee : student.pendingFee;
-
-        if (req.body.password) {
-            student.password = req.body.password;
+        if (password && password.trim() !== '') {
+            // Password is changing — use save() so the pre-save hook hashes it
+            student.name = name || student.name;
+            student.rollNo = rollNo || student.rollNo;
+            student.class = studentClass || student.class;
+            student.mobile = mobile || student.mobile;
+            student.schoolName = schoolName || student.schoolName;
+            student.pendingFee = pendingFee !== undefined ? pendingFee : student.pendingFee;
+            student.password = password;
+            const updatedStudent = await student.save();
+            return res.json(updatedStudent);
         }
 
-        const updatedStudent = await student.save();
+        // No password change — use findByIdAndUpdate to skip pre-save hook entirely
+        const updateFields = {};
+        if (name) updateFields.name = name;
+        if (rollNo) updateFields.rollNo = rollNo;
+        if (studentClass) updateFields.class = studentClass;
+        if (mobile) updateFields.mobile = mobile;
+        if (schoolName) updateFields.schoolName = schoolName;
+        if (pendingFee !== undefined) updateFields.pendingFee = pendingFee;
+
+        const updatedStudent = await Student.findByIdAndUpdate(
+            req.params.id,
+            { $set: updateFields },
+            { new: true, runValidators: false }
+        );
+
         res.json(updatedStudent);
     } catch (error) {
+        console.error('\u274c Error updating student:', error);
         res.status(500).json({ message: error.message });
     }
 };

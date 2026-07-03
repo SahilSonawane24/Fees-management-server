@@ -9,18 +9,39 @@ import API from '../utils/api';
 function YearlyReport({ onLogout, isStudent = false, student: initialStudent = null }) {
     const navigate = useNavigate();
     const { t, language, tEn } = useLanguage();
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+
+    // Academic year like "2025-26" — June(startYear) to April(endYear)
+    const currentCalYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth(); // 0-indexed, June=5
+    // If we're in Jan-May, academic year started last calendar year
+    const defaultAcademicStartYear = currentMonth >= 5 ? currentCalYear : currentCalYear - 1;
+    const [selectedAcademicYear, setSelectedAcademicYear] = useState(
+        `${defaultAcademicStartYear}-${String(defaultAcademicStartYear + 1).slice(-2)}`
+    );
+
+    // Helper: get the calendar year for a given month name within the academic year
+    const firstHalfMonths = ['June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const getYearForMonth = (monthName) => {
+        const startYear = parseInt(selectedAcademicYear.split('-')[0]);
+        return firstHalfMonths.includes(monthName) ? String(startYear) : String(startYear + 1);
+    };
+
+    const academicYears = ['2022-23', '2023-24', '2024-25', '2025-26', '2026-27', '2027-28'];
+
     const [feeData, setFeeData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [student, setStudent] = useState(initialStudent);
 
+    // Date range filter
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+
     // Admin specific states
     const [allStudents, setAllStudents] = useState([]);
-    const [selectedStudentId, setSelectedStudentId] = useState('all'); // Default to 'all'
+    const [selectedStudentId, setSelectedStudentId] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
-    const years = [2022, 2023, 2024, 2025, 2026, 2027];
     const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
@@ -56,6 +77,16 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         fetchStudents();
     }, [isStudent]);
 
+    // Helper: check if a date string falls within fromDate–toDate range
+    const isInDateRange = (rawDate) => {
+        if (!fromDate && !toDate) return true;
+        if (!rawDate) return false;
+        const d = new Date(rawDate);
+        if (fromDate && d < new Date(fromDate)) return false;
+        if (toDate && d > new Date(toDate + 'T23:59:59')) return false;
+        return true;
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             if (isStudent && !student) {
@@ -74,19 +105,31 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                 const transactions = res.data;
 
                 if (!isStudent && selectedStudentId === 'all') {
-                    // Group data for Grid View (Admin only)
+                    // Group data for Grid View (Admin only) — academic year aware
                     const gridRows = allStudents.map(s => {
                         const studentTrans = transactions.filter(t =>
-                            t.student?._id === s._id && t.year === selectedYear
-                        );
+                            t.student?._id === s._id &&
+                            t.year === getYearForMonth(t.month) &&
+                            firstHalfMonths.concat(['January','February','March','April']).includes(t.month)
+                        ).filter(t => t.year === getYearForMonth(t.month));
+
+                        // Re-filter: keep only transactions belonging to this academic year
+                        const academicTrans = transactions.filter(t => {
+                            if (t.student?._id !== s._id) return false;
+                            return t.year === getYearForMonth(t.month) &&
+                                reportMonths.some(m => m.name === t.month);
+                        });
 
                         const rowMonths = reportMonths.reduce((acc, month) => {
-                            const trans = studentTrans.find(t => t.month === month.name);
+                            const trans = academicTrans.find(t => t.month === month.name);
                             acc[month.name] = trans ? trans.amount : 0;
+                            acc[month.name + '_date'] = trans ? (trans.paymentDate || trans.createdAt) : null;
                             return acc;
                         }, {});
 
-                        const rowTotal = Object.values(rowMonths).reduce((sum, amt) => sum + amt, 0);
+                        const rowTotal = Object.values(
+                            Object.fromEntries(Object.entries(rowMonths).filter(([k]) => !k.endsWith('_date')))
+                        ).reduce((sum, amt) => sum + amt, 0);
 
                         return {
                             studentId: s._id,
@@ -98,14 +141,18 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                         };
                     });
                     setGridData(gridRows);
-                    setFeeData([]); // Clear feeData to use gridData instead
+                    setFeeData([]);
                 } else {
-                    // Single Student or Specific Student View
+                    // Single Student or Specific Student View — academic year aware
                     const idToFind = isStudent ? (student?._id) : selectedStudentId;
 
-                    const studentTrans = transactions.filter(t =>
-                        (isStudent ? (t.student?._id === idToFind) : (t.student?._id === selectedStudentId)) && t.year === selectedYear
-                    );
+                    const studentTrans = transactions.filter(t => {
+                        const idMatch = isStudent ? (t.student?._id === idToFind) : (t.student?._id === selectedStudentId);
+                        if (!idMatch) return false;
+                        // Match month to correct calendar year within academic year
+                        return t.year === getYearForMonth(t.month) &&
+                            reportMonths.some(m => m.name === t.month);
+                    });
 
                     const processedData = reportMonths.map(m => {
                         const trans = studentTrans.find(t => t.month === m.name);
@@ -116,9 +163,9 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                             mobile: isStudent ? (student?.mobile || '-') : allStudents.find(std => std._id === selectedStudentId)?.mobile,
                             month: m.name,
                             marathiMonth: m.marathi,
-                            year: selectedYear,
+                            year: getYearForMonth(m.name),
                             amount: trans ? trans.amount : 0,
-                            totalAmount: trans ? trans.amount : 0, // In this context, total for month is same as amount
+                            totalAmount: trans ? trans.amount : 0,
                             rawDate: trans ? (trans.paymentDate || trans.createdAt) : null,
                             date: trans ? new Date(trans.paymentDate || trans.createdAt).toLocaleDateString() : '-',
                             status: trans ? trans.status : 'Unpaid'
@@ -137,7 +184,7 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         if (allStudents.length > 0 || isStudent) {
             fetchData();
         }
-    }, [selectedYear, isStudent, selectedStudentId, allStudents.length, student?._id]);
+    }, [selectedAcademicYear, isStudent, selectedStudentId, allStudents.length, student?._id]);
 
     const [editingTransaction, setEditingTransaction] = useState(null);
     const [editFormData, setEditFormData] = useState({
@@ -205,7 +252,8 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         const matchesSearch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.rollNo && item.rollNo.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesStatus = statusFilter === 'all' || item.status.toLowerCase() === statusFilter.toLowerCase();
-        return matchesSearch && matchesStatus;
+        const matchesDate = isInDateRange(item.rawDate);
+        return matchesSearch && matchesStatus && (item.status === 'Unpaid' || matchesDate);
     });
 
     const filteredGridData = gridData.filter(item => {
@@ -250,7 +298,8 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                 d.text(tEn('schoolBranding'), pageWidth / 2, 8, { align: 'center' });
                 d.setFontSize(10);
                 d.setFont('helvetica', 'normal');
-                d.text(`${tEn('YearlyCollectionReport')} - ${selectedYear}`, pageWidth / 2, 14, { align: 'center' });
+                const dateRangeLabel = fromDate || toDate ? ` | ${fromDate || '...'} to ${toDate || '...'}` : '';
+                d.text(`${tEn('YearlyCollectionReport')} - ${selectedAcademicYear}${dateRangeLabel}`, pageWidth / 2, 14, { align: 'center' });
             };
 
             drawHeader(doc);
@@ -259,7 +308,13 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
             const tableColumn = ['Name', ...reportMonths.map(m => m.name), 'Total'];
             const tableRows = filteredGridData.map(item => [
                 item.studentName,
-                ...reportMonths.map(m => item[m.name] > 0 ? `Rs. ${item[m.name]}` : '-'),
+                ...reportMonths.map(m => {
+                    const amt = item[m.name] || 0;
+                    const dateVal = item[m.name + '_date'];
+                    if (amt > 0 && isInDateRange(dateVal)) return `Rs. ${amt}`;
+                    if (amt > 0 && !fromDate && !toDate) return `Rs. ${amt}`;
+                    return '-';
+                }),
                 `Rs. ${item.total.toLocaleString()}`
             ]);
 
@@ -274,7 +329,7 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                 didDrawPage: (data) => { if (data.pageNumber > 1) drawHeader(doc); }
             });
 
-            doc.save(`Yearly_Report_${selectedYear}.pdf`);
+            doc.save(`Yearly_Report_${selectedAcademicYear}.pdf`);
             return;
         }
 
@@ -299,7 +354,10 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         doc.setTextColor(100);
         doc.setFontSize(10);
         doc.text(`${tEn('generatedAt')}: ${new Date().toLocaleString()}`, 14, 28);
-        doc.text(`${tEn('academicYear')}: ${selectedYear}`, 14, 33);
+        doc.text(`${tEn('academicYear')}: ${selectedAcademicYear}`, 14, 33);
+        if (fromDate || toDate) {
+            doc.text(`Date Range: ${fromDate || 'Start'} to ${toDate || 'Today'}`, 14, 38);
+        }
 
         if (isStudent || selectedStudentId !== 'all') {
             const displayStudent = isStudent ? student : allStudents.find(s => s._id === selectedStudentId);
@@ -389,8 +447,109 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
         doc.setTextColor(220, 38, 38); // Error Red
         doc.text(`${tEn('totalPendingBalance')}: Rs. ${totalPending.toLocaleString()}`, 20, finalY + 20);
 
-        const fileName = isStudent ? `Yearly_Report_${student?.rollNo}_${selectedYear}.pdf` : `Yearly_Collection_${selectedYear}.pdf`;
+        const fileName = isStudent ? `Yearly_Report_${student?.rollNo}_${selectedAcademicYear}.pdf` : `Yearly_Collection_${selectedAcademicYear}.pdf`;
         doc.save(fileName);
+    };
+
+    // Generate PDF for a single student from the grid view
+    const handleDownloadSingleStudentReport = (item) => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        const studentInfo = allStudents.find(s => s._id === item.studentId) || {};
+
+        // ── Header ──
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, pageWidth, 22, 'F');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Fee Management System', pageWidth / 2, 9, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        const dateRangeLabel = fromDate || toDate ? ` | ${fromDate || '...'} to ${toDate || '...'}` : ` | ${selectedAcademicYear}`;
+        doc.text(`Student Fee Report${dateRangeLabel}`, pageWidth / 2, 16, { align: 'center' });
+
+        // ── Student Info Box ──
+        doc.setFillColor(241, 245, 249);
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(14, 26, pageWidth - 28, 36, 3, 3, 'FD');
+
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Student Details', 18, 34);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Name   : ${item.studentName}`, 18, 41);
+        doc.text(`Roll No: ${item.rollNo || 'N/A'}`, 18, 47);
+        doc.text(`Mobile : ${item.mobile || 'N/A'}`, 18, 53);
+        doc.text(`School : ${studentInfo.schoolName || 'N/A'}`, 110, 41);
+        doc.text(`Class  : ${studentInfo.class || 'N/A'}`, 110, 47);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 110, 53);
+
+        // ── Payment Table ──
+        const tableColumns = ['Month', 'Amount (Rs.)', 'Payment Date', 'Status'];
+        const tableRows = reportMonths.map(m => {
+            const amt = item[m.name] || 0;
+            const dateVal = item[m.name + '_date'];
+            const inRange = !fromDate && !toDate ? true : isInDateRange(dateVal);
+            const displayAmt = amt > 0 && inRange ? `Rs. ${amt.toLocaleString()}` : '-';
+            const displayDate = dateVal && inRange ? new Date(dateVal).toLocaleDateString() : '-';
+            const status = amt > 0 && inRange ? 'Paid' : 'Unpaid';
+            return [m.name, displayAmt, displayDate, status];
+        });
+
+        autoTable(doc, {
+            head: [tableColumns],
+            body: tableRows,
+            startY: 68,
+            theme: 'grid',
+            headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold', halign: 'center' },
+            styles: { fontSize: 8.5, cellPadding: 2.5 },
+            columnStyles: {
+                0: { fontStyle: 'bold' },
+                1: { halign: 'center' },
+                2: { halign: 'center' },
+                3: {
+                    halign: 'center',
+                    fontStyle: 'bold'
+                }
+            },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            didParseCell: (data) => {
+                if (data.column.index === 3 && data.section === 'body') {
+                    data.cell.styles.textColor = data.cell.raw === 'Paid' ? [22, 163, 74] : [220, 38, 38];
+                }
+            }
+        });
+
+        // ── Footer Summary ──
+        const finalY = doc.lastAutoTable.finalY + 6;
+        const studentTotalPaid = reportMonths.reduce((sum, m) => {
+            const amt = item[m.name] || 0;
+            const dateVal = item[m.name + '_date'];
+            const inRange = !fromDate && !toDate ? true : isInDateRange(dateVal);
+            return sum + (inRange ? amt : 0);
+        }, 0);
+        const pendingBalance = studentInfo.pendingFee || 0;
+
+        doc.setFillColor(240, 253, 244);
+        doc.setDrawColor(22, 163, 74);
+        doc.roundedRect(14, finalY, (pageWidth - 28) / 2 - 4, 14, 2, 2, 'FD');
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(22, 163, 74);
+        doc.text(`Total Paid: Rs. ${studentTotalPaid.toLocaleString()}`, 18, finalY + 9);
+
+        doc.setFillColor(254, 242, 242);
+        doc.setDrawColor(220, 38, 38);
+        doc.roundedRect(14 + (pageWidth - 28) / 2 + 4, finalY, (pageWidth - 28) / 2 - 4, 14, 2, 2, 'FD');
+        doc.setTextColor(220, 38, 38);
+        doc.text(`Pending Balance: Rs. ${pendingBalance.toLocaleString()}`, 18 + (pageWidth - 28) / 2 + 4, finalY + 9);
+
+        doc.save(`Report_${item.studentName.replace(/\s+/g, '_')}_${selectedAcademicYear}.pdf`);
     };
 
     if (loading && feeData.length === 0) {
@@ -477,19 +636,60 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                     </select>
                                 </div>
                             )}
+
+                            {/* Academic Year Selector */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Calendar size={20} color="var(--color-text-secondary)" />
                                 <select
                                     className="form-select"
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(e.target.value)}
-                                    style={{ minWidth: '100px' }}
+                                    value={selectedAcademicYear}
+                                    onChange={(e) => setSelectedAcademicYear(e.target.value)}
+                                    style={{ minWidth: '110px' }}
                                 >
-                                    {years.map(year => (
-                                        <option key={year} value={year}>{year}</option>
+                                    {academicYears.map(ay => (
+                                        <option key={ay} value={ay}>{ay}</option>
                                     ))}
                                 </select>
                             </div>
+
+                            {/* From - To Date Range */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                                        From
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="form-input"
+                                        value={fromDate}
+                                        onChange={(e) => setFromDate(e.target.value)}
+                                        style={{ minWidth: '140px', fontSize: '0.85rem', padding: '0.4rem 0.6rem' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                                        To
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="form-input"
+                                        value={toDate}
+                                        onChange={(e) => setToDate(e.target.value)}
+                                        style={{ minWidth: '140px', fontSize: '0.85rem', padding: '0.4rem 0.6rem' }}
+                                    />
+                                </div>
+                                {(fromDate || toDate) && (
+                                    <button
+                                        className="btn btn-sm btn-outline"
+                                        onClick={() => { setFromDate(''); setToDate(''); }}
+                                        style={{ color: 'var(--color-error)', borderColor: 'var(--color-error-light)', fontSize: '0.8rem', padding: '0.3rem 0.7rem' }}
+                                        title="Clear date filter"
+                                    >
+                                        ✕ Clear
+                                    </button>
+                                )}
+                            </div>
+
                             <button className="btn btn-primary" onClick={handleDownloadReport}>
                                 <Download size={18} />
                                 {t('exportData')}
@@ -554,6 +754,9 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                         <th style={{ textAlign: 'center', background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
                                             {t('totalAmount')}
                                         </th>
+                                        <th style={{ textAlign: 'center', background: '#f0fdf4', color: '#166534' }}>
+                                            Report
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -572,6 +775,25 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                                                 ))}
                                                 <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--color-primary)', background: '#f8fafc' }}>
                                                     ₹{item.total.toLocaleString()}
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <button
+                                                        className="btn btn-sm btn-outline"
+                                                        onClick={() => handleDownloadSingleStudentReport(item)}
+                                                        title={`Download report for ${item.studentName}`}
+                                                        style={{
+                                                            color: '#166534',
+                                                            borderColor: '#bbf7d0',
+                                                            padding: '0.3rem 0.6rem',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.3rem',
+                                                            fontSize: '0.78rem'
+                                                        }}
+                                                    >
+                                                        <Download size={13} />
+                                                        PDF
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
@@ -685,7 +907,12 @@ function YearlyReport({ onLogout, isStudent = false, student: initialStudent = n
                     }}>
                         <div>
                             <div style={{ fontSize: '1rem', color: 'var(--color-secondary-dark)', marginBottom: '0.25rem' }}>
-                                {t('totalCollected')} ({selectedYear})
+                                {t('totalCollected')} ({selectedAcademicYear})
+                                {(fromDate || toDate) && (
+                                    <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>
+                                        ({fromDate || '...'} → {toDate || '...'})
+                                    </span>
+                                )}
                             </div>
                             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
                                 {paidRecords} {t('paid')}

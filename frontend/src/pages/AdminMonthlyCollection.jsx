@@ -77,8 +77,8 @@ function AdminMonthlyCollection({ onLogout }) {
             const { data } = await API.put(`/transactions/${editingTransaction._id}`, editFormData);
 
             // Update local state
-            setTransactions(transactions.map(t =>
-                t._id === editingTransaction._id ? { ...t, ...data, student: t.student } : t
+            setTransactions(transactions.map(txn =>
+                txn._id === editingTransaction._id ? { ...txn, ...data, student: txn.student } : txn
             ));
 
             setEditingTransaction(null);
@@ -134,14 +134,14 @@ function AdminMonthlyCollection({ onLogout }) {
 
         // Table
         const tableColumn = [t('name'), t('mobile'), t('rollNo'), t('totalAmount'), t('paidAmount'), t('paymentDate'), t('status')];
-        const tableRows = filteredTransactions.map(t => [
-            t.student?.name || 'N/A',
-            t.student?.mobile || '-',
-            t.student?.rollNo || 'N/A',
-            `Rs. ${t.amount.toLocaleString()}`,
-            `Rs. ${t.amount.toLocaleString()}`,
-            new Date(t.paymentDate || t.createdAt).toLocaleDateString(),
-            t.status === 'Paid' ? t('paid') : t('pending')
+        const tableRows = filteredTransactions.map(txn => [
+            txn.student?.name || 'N/A',
+            txn.student?.mobile || '-',
+            txn.student?.rollNo || 'N/A',
+            `Rs. ${txn.amount.toLocaleString()}`,
+            `Rs. ${txn.amount.toLocaleString()}`,
+            new Date(txn.paymentDate || txn.createdAt).toLocaleDateString(),
+            txn.status === 'Paid' ? t('paid') : t('pending')
         ]);
 
         autoTable(doc, {
@@ -328,18 +328,18 @@ function AdminMonthlyCollection({ onLogout }) {
                             </thead>
                             <tbody>
                                 {filteredTransactions.length > 0 ? (
-                                    filteredTransactions.map((t) => (
-                                        <tr key={t._id}>
-                                            <td style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{t.student?.name}</td>
-                                            <td>{t.student?.rollNo}</td>
-                                            <td style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>₹{t.amount.toLocaleString()}</td>
-                                            <td style={{ fontWeight: 700, color: 'var(--color-secondary)' }}>₹{t.amount.toLocaleString()}</td>
-                                            <td>{new Date(t.paymentDate || t.createdAt).toLocaleDateString()}</td>
-                                            <td><span className={`badge badge-${t.status === 'Paid' ? 'success' : 'danger'}`}>{t.status === 'Paid' ? t('paid') : t('pending')}</span></td>
+                                    filteredTransactions.map((txn) => (
+                                        <tr key={txn._id}>
+                                            <td style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{txn.student?.name}</td>
+                                            <td>{txn.student?.rollNo}</td>
+                                            <td style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>₹{txn.amount.toLocaleString()}</td>
+                                            <td style={{ fontWeight: 700, color: 'var(--color-secondary)' }}>₹{txn.amount.toLocaleString()}</td>
+                                            <td>{new Date(txn.paymentDate || txn.createdAt).toLocaleDateString()}</td>
+                                            <td><span className={`badge badge-${txn.status === 'Paid' ? 'success' : 'danger'}`}>{txn.status === 'Paid' ? t('paid') : t('pending')}</span></td>
                                             <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                                 <button
                                                     className="btn btn-sm btn-outline"
-                                                    onClick={() => handleEditClick(t)}
+                                                    onClick={() => handleEditClick(txn)}
                                                     style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary-light)', padding: '0.4rem' }}
                                                     title={t('edit')}
                                                 >
@@ -347,7 +347,7 @@ function AdminMonthlyCollection({ onLogout }) {
                                                 </button>
                                                 <button
                                                     className="btn btn-sm btn-outline"
-                                                    onClick={() => handleDeleteTransaction(t._id)}
+                                                    onClick={() => handleDeleteTransaction(txn._id)}
                                                     style={{ color: 'var(--color-error)', borderColor: 'var(--color-error-light)', padding: '0.4rem' }}
                                                     title={t('delete')}
                                                 >

@@ -150,20 +150,7 @@ function AdminLogin({ onLogin }) {
                                 )}
                             </button>
                         </form>
-{/* 
-                         Demo credentials hint 
-                        <div style={{
-                            marginTop: '2rem',
-                            padding: '1rem',
-                            background: 'var(--color-info-light)',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            color: 'var(--color-primary-dark)'
-                        }}>
-                             {/*<strong>Demo Credentials:</strong><br />
-                            Username: Sahil<br />
-                            Password: 2005 
-                        </div> */}
+
                     </div>
                 </div>
             </div>
