@@ -15,15 +15,9 @@ function LandingPage() {
     ];
 
     return (
-        <div className="page-container" style={{
-            background: 'linear-gradient(135deg, #eff6ff 0%, #f8fafc 50%, #f0fdf4 100%)',
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative'
-        }}>
+        <div className="page-container page-hero">
             {/* Language Switcher for Landing Page */}
-            <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>
+            <div className="language-switcher">
                 <button
                     className="btn btn-outline btn-sm"
                     style={{ background: 'white', borderRadius: 'var(--radius-full)' }}
@@ -57,63 +51,26 @@ function LandingPage() {
             </div>
 
             <div className="container">
-                <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
+                <div className="hero-content">
                     {/* Logo/Icon */}
-                    <div style={{
-                        width: '100px',
-                        height: '100px',
-                        margin: '0 auto 2rem',
-                        background: 'linear-gradient(135deg, #2563eb, #10b981)',
-                        borderRadius: '2rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        animation: 'slideInUp 0.6s ease-out'
-                    }}>
+                    <div className="hero-logo">
                         <GraduationCap size={56} color="white" strokeWidth={2} />
                     </div>
 
                     {/* Title */}
-                    <h1 style={{
-                        fontSize: '3.5rem',
-                        marginBottom: '1rem',
-                        background: 'linear-gradient(135deg, #2563eb, #10b981)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        animation: 'fadeIn 0.8s ease-out'
-                    }}>
+                    <h1 className="landing-title">
                         {t('appName')}
                     </h1>
 
                     {/* Subtitle */}
-                    <p style={{
-                        fontSize: '1.25rem',
-                        color: 'var(--color-text-secondary)',
-                        marginBottom: '3rem',
-                        maxWidth: '600px',
-                        margin: '0 auto 3rem',
-                        animation: 'fadeIn 1s ease-out'
-                    }}>
+                    <p className="landing-subtitle">
                         Smart, secure, and efficient student fee management system with AI-powered analytics and insights.
                     </p>
 
                     {/* Features */}
-                    <div className="grid grid-3" style={{
-                        marginBottom: '3rem',
-                        gap: '1.5rem'
-                    }}>
+                    <div className="landing-feature-grid">
                         <div className="card" style={{ animation: 'slideInUp 0.6s ease-out 0.2s both' }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                margin: '0 auto 1rem',
-                                background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-                                borderRadius: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                            <div className="landing-card-icon">
                                 <Shield size={28} color="#2563eb" />
                             </div>
                             <h4 style={{ marginBottom: '0.5rem' }}>Secure Access</h4>
@@ -121,16 +78,7 @@ function LandingPage() {
                         </div>
 
                         <div className="card" style={{ animation: 'slideInUp 0.6s ease-out 0.4s both' }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                margin: '0 auto 1rem',
-                                background: 'linear-gradient(135deg, #f0fdf4, #d1fae5)',
-                                borderRadius: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                            <div className="landing-card-icon" style={{ background: 'linear-gradient(135deg, #f0fdf4, #d1fae5)' }}>
                                 <Sparkles size={28} color="#10b981" />
                             </div>
                             <h4 style={{ marginBottom: '0.5rem' }}>AI Analytics</h4>
@@ -138,16 +86,7 @@ function LandingPage() {
                         </div>
 
                         <div className="card" style={{ animation: 'slideInUp 0.6s ease-out 0.6s both' }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                margin: '0 auto 1rem',
-                                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                                borderRadius: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                            <div className="landing-card-icon" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)' }}>
                                 <TrendingUp size={28} color="#f59e0b" />
                             </div>
                             <h4 style={{ marginBottom: '0.5rem' }}>Real-time Reports</h4>
@@ -155,13 +94,7 @@ function LandingPage() {
                         </div>
                     </div>
 
-                    <div style={{
-                        display: 'flex',
-                        gap: '1.5rem',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap',
-                        animation: 'slideInUp 0.6s ease-out 0.8s both'
-                    }}>
+                    <div className="hero-cta-group" style={{ animation: 'slideInUp 0.6s ease-out 0.8s both' }}>
                         <button
                             className="btn btn-primary btn-lg"
                             onClick={() => navigate('/admin/login')}
