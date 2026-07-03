@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://server-fms-1phq.onrender.com',
+    baseURL: import.meta.env.VITE_API_URL || 'https://server-fms-1phq.onrender.com/api',
 });
 
 // Add a request interceptor to add the auth token to every request
