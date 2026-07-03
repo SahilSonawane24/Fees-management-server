@@ -133,7 +133,7 @@ function StudentDashboard({ student, onLogout }) {
                 </div>
 
                 {/* Profile Card & QR Code Display */}
-                <div className="grid" style={{ gridTemplateColumns: currentStudent?.qrImage ? '2fr 1fr' : '1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                <div className="grid dashboard-profile-grid" style={{ gridTemplateColumns: currentStudent?.qrImage ? '2fr 1fr' : '1fr', gap: '1.5rem', marginBottom: '2rem' }}>
                     <div className="card" style={{ padding: '2rem' }}>
                         <h3 style={{ marginBottom: '1.5rem' }}>{t('student')} {t('profile')}</h3>
 

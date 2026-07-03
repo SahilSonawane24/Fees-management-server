@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, ChevronDown } from 'lucide-react';
+import { LogOut, Globe, ChevronDown, Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useRef, useEffect } from 'react';
 
@@ -7,6 +7,7 @@ function Navbar({ onLogout, userName = 'User', userRole = 'Student' }) {
     const navigate = useNavigate();
     const { language, setLanguage, t } = useLanguage();
     const [showLangMenu, setShowLangMenu] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -18,6 +19,27 @@ function Navbar({ onLogout, userName = 'User', userRole = 'Student' }) {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Close mobile menu on route change / resize
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768) {
+                setMobileMenuOpen(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen]);
 
     const languages = [
         { code: 'en', name: 'English', label: 'EN' },
@@ -31,18 +53,41 @@ function Navbar({ onLogout, userName = 'User', userRole = 'Student' }) {
         if (onLogout) {
             onLogout();
         }
+        setMobileMenuOpen(false);
         navigate('/');
+    };
+
+    const handleNavAction = (path) => {
+        setMobileMenuOpen(false);
+        navigate(path);
     };
 
     return (
         <nav className="navbar">
             <div className="container">
                 <div className="navbar-content">
-                    <div className="navbar-brand" onClick={() => navigate(userRole === 'Admin' ? '/admin/dashboard' : '/student/dashboard')} style={{ cursor: 'pointer' }}>
+                    <div className="navbar-brand" onClick={() => handleNavAction(userRole === 'Admin' ? '/admin/dashboard' : '/student/dashboard')} style={{ cursor: 'pointer' }}>
                         {t('appName')}
                     </div>
 
-                    <div className="navbar-actions">
+                    {/* Hamburger button - visible only on mobile */}
+                    <button
+                        className="navbar-hamburger"
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+
+                    {/* Mobile overlay */}
+                    {mobileMenuOpen && (
+                        <div
+                            className="navbar-mobile-overlay"
+                            onClick={() => setMobileMenuOpen(false)}
+                        />
+                    )}
+
+                    <div className={`navbar-actions ${mobileMenuOpen ? 'navbar-actions--open' : ''}`}>
                         {/* Language Selector */}
                         <div style={{ position: 'relative' }} ref={menuRef}>
                             <button

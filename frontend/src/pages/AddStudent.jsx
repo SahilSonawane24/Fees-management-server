@@ -387,7 +387,7 @@ function AddStudent({ onLogout }) {
                                     </p>
                                 </div>
 
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <div className="form-group form-group-full" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">
                                         <ImageIcon size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
                                         {t('studentQrCode')}

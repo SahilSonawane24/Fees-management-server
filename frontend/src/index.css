@@ -580,6 +580,69 @@ tbody td {
 }
 
 /* ============================================
+   MODALS
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-lg);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn var(--transition-fast);
+}
+
+.modal-content {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  padding: var(--spacing-xl);
+  width: 100%;
+  border: 1px solid var(--color-border);
+  animation: slideInUp var(--transition-base);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.close-button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.form-group-full {
+  grid-column: span 2;
+}
+
+/* ============================================
    NAVBAR
    ============================================ */
 .navbar {
@@ -834,7 +897,30 @@ tbody td {
 }
 
 /* ============================================
-   RESPONSIVE
+   HAMBURGER MENU (hidden on desktop)
+   ============================================ */
+.navbar-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  z-index: 210;
+}
+
+.navbar-hamburger:hover {
+  background: var(--color-bg-hover);
+}
+
+.navbar-mobile-overlay {
+  display: none;
+}
+
+/* ============================================
+   RESPONSIVE — TABLET (max-width: 1024px)
    ============================================ */
 @media (max-width: 1024px) {
   .grid-3,
@@ -847,124 +933,330 @@ tbody td {
   }
 }
 
+/* ============================================
+   RESPONSIVE — MOBILE (max-width: 768px)
+   ============================================ */
 @media (max-width: 768px) {
   html {
     font-size: 15px;
   }
 
-  h1 {
-    font-size: 2rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-  }
-
-  h3 {
-    font-size: 1.25rem;
-  }
-
-  .stats-grid,
-  .grid-2,
-  .grid-3,
-  .grid-4 {
-    grid-template-columns: 1fr;
-  }
-
-  .navbar-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .navbar-actions {
-    justify-content: space-between;
-    width: 100%;
-  }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.15rem; }
 
   .container {
     padding: 0 var(--spacing-md);
   }
 
-  .card {
-    padding: var(--spacing-lg);
+  /* ---- NAVBAR HAMBURGER DRAWER ---- */
+  .navbar-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
+  .navbar-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+
+  .navbar-mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 190;
+    animation: fadeIn 0.2s ease-out;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+
+  .navbar-actions {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--color-bg-card);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    flex-direction: column;
+    align-items: stretch;
+    padding: 5rem 1.5rem 2rem;
+    gap: 1rem;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+  }
+
+  .navbar-actions--open {
+    transform: translateX(0);
+  }
+
+  .navbar-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-hover);
+  }
+
+  /* ---- GRIDS ---- */
+  .stats-grid,
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---- STATS ---- */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--spacing-md);
+  }
+
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* ---- CARDS ---- */
+  .card {
+    padding: var(--spacing-lg) !important;
+    border-radius: var(--radius-lg);
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  /* ---- TABLES ---- */
   .table-wrapper {
     border-radius: var(--radius-md);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    margin: 0 calc(-1 * var(--spacing-md));
+    width: calc(100% + 2 * var(--spacing-md));
+    border-radius: 0;
   }
 
   .table-wrapper table {
-    min-width: 640px;
+    min-width: 580px;
   }
 
   table {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   thead th,
   tbody td {
-    padding: 0.75rem 0.9rem;
+    padding: 0.65rem 0.75rem;
+    white-space: nowrap;
   }
 
+  /* ---- BUTTONS ---- */
   .btn {
     padding: 0.65rem 1rem;
     font-size: 0.875rem;
   }
 
   .btn.btn-sm {
-    padding: 0.5rem 0.9rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
   }
 
-  .user-info {
-    width: 100%;
-    justify-content: space-between;
+  .btn-lg {
+    padding: 0.875rem 1.5rem !important;
+    font-size: 1rem !important;
   }
 
-  /* responsive fallback for inline flex/grid styles */
-  *[style*="display:flex"],
-  *[style*="display: flex"] {
-    flex-wrap: wrap !important;
-    align-items: stretch !important;
+  /* ---- FORMS ---- */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 0.75rem 0.875rem;
+    font-size: 16px; /* prevents iOS zoom on focus */
   }
 
-  *[style*="justify-content: space-between"],
-  *[style*="justify-content:space-between"] {
-    justify-content: flex-start !important;
-    gap: var(--spacing-md) !important;
+  /* ---- ALERTS ---- */
+  .alert {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
   }
 
-  *[style*="display:grid"],
-  *[style*="display: grid"] {
+  /* ---- PAGE HEADERS (inline flex space-between) ---- */
+  .container > div[style*="display: flex"][style*="justify-content: space-between"],
+  .container > div[style*="display:flex"][style*="justify-content:space-between"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  /* ---- MODALS ---- */
+  .modal-overlay,
+  div[style*="position: fixed"][style*="display: flex"],
+  div[style*="position:fixed"][style*="display:flex"] {
+    padding: 1rem !important;
+    align-items: flex-start !important;
+    padding-top: 2rem !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-content,
+  div[style*="position: fixed"] > .card,
+  div[style*="position:fixed"] > .card,
+  div[style*="position: fixed"] .card,
+  div[style*="position:fixed"] .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+  }
+
+
+  /* ---- INLINE GRID OVERRIDE ---- */
+  div[style*="display: grid"]:not(.stats-grid):not(.landing-feature-grid) {
     grid-template-columns: 1fr !important;
+  }
+
+  /* ---- INLINE FLEX WRAP ---- */
+  div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Don't break loading spinners or icon containers */
+  div[style*="display: flex"][style*="align-items: center"][style*="justify-content: center"]:not([style*="gap"]) {
+    flex-wrap: nowrap !important;
+  }
+
+  /* ---- QR SECTION ---- */
+  .dashboard-profile-grid,
+  .grid[style*="2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---- LANDING PAGE ---- */
+  .landing-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-hero {
+    padding: var(--spacing-xl) 0;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+    min-width: unset !important;
+  }
+
+  /* ---- ACTION BUTTONS IN TABLES ---- */
+  .action-buttons {
+    flex-wrap: nowrap !important;
+    gap: 0.25rem;
+  }
+
+  .action-buttons .btn {
+    width: auto;
+    padding: 0.35rem !important;
+  }
+
+  /* ---- QR Upload area ---- */
+  .form-group-full,
+  div[style*="gridColumn: span 2"],
+  div[style*="grid-column: span 2"] {
+    grid-column: span 1 !important;
+  }
+
+  /* ---- Form submit button rows ---- */
+  div[style*="display: flex"][style*="gap: 1rem"][style*="margin-top: 2rem"] {
+    flex-direction: column !important;
+  }
+
+  div[style*="display: flex"][style*="gap: 1rem"][style*="margin-top: 2rem"] .btn {
+    width: 100% !important;
   }
 }
 
+/* ============================================
+   RESPONSIVE — SMALL MOBILE (max-width: 480px)
+   ============================================ */
 @media (max-width: 480px) {
   html {
     font-size: 14px;
   }
 
-  .navbar-actions,
-  .navbar-content {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
     gap: var(--spacing-sm);
   }
 
-  .navbar-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .stat-card {
+    padding: var(--spacing-md);
   }
 
-  .user-info {
-    padding: var(--spacing-xs) var(--spacing-sm);
+  .stat-value {
+    font-size: 1.35rem;
   }
 
   .card {
-    padding: 1.25rem;
+    padding: var(--spacing-md) !important;
+    border-radius: var(--radius-md);
   }
 
-  .btn {
+  .page-container {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .hero-logo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .language-switcher {
+    position: static;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* All buttons full-width on smallest screens */
+  .btn:not(.btn-sm):not(.action-buttons .btn) {
     width: 100%;
   }
 
@@ -973,6 +1265,17 @@ tbody td {
     flex-direction: column;
     gap: var(--spacing-sm);
     align-items: stretch;
+  }
+
+  /* Login cards */
+  .card.slide-in-up {
+    padding: 1.5rem !important;
+  }
+
+  /* Badge sizing */
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 
@@ -998,6 +1301,16 @@ tbody td {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }
 
@@ -1032,4 +1345,17 @@ tbody td {
   display: flex;
   gap: var(--spacing-sm);
   align-items: center;
+}
+
+/* ============================================
+   SAFE AREA (notched phones)
+   ============================================ */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .navbar {
+    padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+  }
+
+  .page-container {
+    padding-bottom: max(var(--spacing-2xl), env(safe-area-inset-bottom));
+  }
 }
