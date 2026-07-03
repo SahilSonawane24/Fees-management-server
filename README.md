@@ -87,6 +87,16 @@ npm run data:import
 npm run dev
 ```
 
+**Run Frontend + Backend Together:**
+You can run both the backend and frontend dev servers with a single command from the project root. First install root dev dependencies, then run:
+
+```bash
+# from project root
+npm install
+npm run dev
+```
+This uses `concurrently` to run `backend` and `frontend` `npm run dev` scripts in parallel (auto-restarts and HMR enabled).
+
 ### 3. Frontend Configuration
 ```bash
 cd ../frontend
