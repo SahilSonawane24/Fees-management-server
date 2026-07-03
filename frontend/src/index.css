@@ -583,6 +583,8 @@ tbody td {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
 }
 
 .navbar-brand {
@@ -593,12 +595,19 @@ tbody td {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-decoration: none;
+  min-width: 0;
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.navbar-actions > * {
+  min-width: 0;
 }
 
 .user-info {
@@ -608,6 +617,7 @@ tbody td {
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-bg-hover);
   border-radius: var(--radius-full);
+  min-width: 0;
 }
 
 .user-avatar {
@@ -704,27 +714,49 @@ tbody td {
 /* ============================================
    RESPONSIVE
    ============================================ */
+@media (max-width: 1024px) {
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
   h1 {
     font-size: 2rem;
   }
 
   h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   h3 {
-    font-size: 1.375rem;
+    font-size: 1.25rem;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .stats-grid,
   .grid-2,
   .grid-3,
   .grid-4 {
     grid-template-columns: 1fr;
+  }
+
+  .navbar-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navbar-actions {
+    justify-content: space-between;
+    width: 100%;
   }
 
   .container {
@@ -739,13 +771,66 @@ tbody td {
     border-radius: var(--radius-md);
   }
 
-  .navbar-brand {
-    font-size: 1.25rem;
+  .table-wrapper table {
+    min-width: 640px;
+  }
+
+  table {
+    font-size: 0.95rem;
+  }
+
+  thead th,
+  tbody td {
+    padding: 0.75rem 0.9rem;
   }
 
   .btn {
-    padding: 0.625rem 1.25rem;
+    padding: 0.65rem 1rem;
     font-size: 0.875rem;
+  }
+
+  .btn.btn-sm {
+    padding: 0.5rem 0.9rem;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  .navbar-actions,
+  .navbar-content {
+    gap: var(--spacing-sm);
+  }
+
+  .navbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-info {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .flex-between,
+  .flex-center {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
   }
 }
 
