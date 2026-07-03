@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://server-fms-1phq.onrender.com/api/$1"
+    }
+  ]
+}

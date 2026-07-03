@@ -1,11 +1,9 @@
 import axios from 'axios';
 
-// Resolve base URL and ensure it ends with `/api`.
-const rawBase =  (typeof window !== 'undefined' && window.location && !/localhost|127\.0\.0\.1/.test(window.location.hostname)
-    ? window.location.origin:'https://server-fms-1phq.onrender.com'
-    );
-
-const trimmed = rawBase.replace(/\/+$|\s+/g, '');
+// Resolve base URL from env or use the deployed backend host.
+// For Vite builds, VITE_API_URL should be set to the backend origin + /api.
+const rawBase = import.meta.env.VITE_API_URL || 'https://server-fms-1phq.onrender.com/api';
+const trimmed = rawBase.replace(/\/+$/g, '');
 const resolvedBaseURL = /\/api$/.test(trimmed) ? trimmed : `${trimmed}/api`;
 
 const API = axios.create({
